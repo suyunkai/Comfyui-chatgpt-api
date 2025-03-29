@@ -37,13 +37,6 @@
 https://github.com/comfyanonymous/ComfyUI
 
 
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ainewsto/Comfyui_Comfly&type=Date)](https://star-history.com/#ainewsto/Comfyui_Comfly&Date)
-
-
-
 ## 🚀 About me
 * website: https://comfly.chat
 * Welcome valuable suggestions! 📧 **Email**: [3508432500@qq.com](mailto:1544007699@qq.com)
