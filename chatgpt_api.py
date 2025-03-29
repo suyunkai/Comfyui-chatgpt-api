@@ -30,7 +30,7 @@ class ComfyuiChatGPTApi:
         return {
             "required": {
                 "prompt": ("STRING", {"multiline": True}),
-                "model": ("STRING", {"default": "gpt-4o-all", "multiline": False}),             
+                "model": ("STRING", {"default": "gpt-4o-image", "multiline": False}),             
             },
             "optional": {
                 "files": ("FILES",), 
