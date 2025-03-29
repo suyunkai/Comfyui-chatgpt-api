@@ -10,7 +10,7 @@
 
 `Chatgpt节点`: 
 
-新增openai的ComflyChatGPTApi节点，。
+新增openai的comfyui-chatgpt-api节点，。
 目前单图和多图输入，文本输入，生成图片，图片编辑.使用的是 https://ai.comfly.chat 的 api key
 固定一次生成消耗0.06元（显示是逆向api，稳定性还不高，想尝鲜的可以注册网站用免费送的0.2美金玩玩）
 速度不快，因为官网速度也不快，所以需要点耐心。 files输入接口还没有完善，先忽略。
