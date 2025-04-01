@@ -17,22 +17,31 @@ import folder_paths
 from .utils import pil2tensor, tensor2pil
 
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-config_file_path = os.path.join(current_dir, 'Comflyapi.json')
+def get_config():
+    try:
+        config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Comflyapi.json')
+        with open(config_path, 'r') as f:  
+            config = json.load(f)
+        return config
+    except:
+        return {}
 
-with open(config_file_path, 'r') as f:
-    api_config = json.load(f)
+def save_config(config):
+    config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Comflyapi.json')
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=4)
 
 
 class ComfyuiChatGPTApi:
-    @classmethod
+     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "prompt": ("STRING", {"multiline": True}),
-                "model": ("STRING", {"default": "gpt-4o-image", "multiline": False}),             
+                "model": ("STRING", {"default": "gpt-4o-image-vip", "multiline": False}),             
             },
             "optional": {
+                "api_key": ("STRING", {"default": ""}),
                 "files": ("FILES",), 
                 "image_url": ("STRING", {"multiline": False, "default": ""}),
                 "images": ("IMAGE", {"default": None}),  
@@ -42,31 +51,19 @@ class ComfyuiChatGPTApi:
                 "frequency_penalty": ("FLOAT", {"default": 0.0, "min": -2.0, "max": 2.0, "step": 0.01}),
                 "presence_penalty": ("FLOAT", {"default": 0.0, "min": -2.0, "max": 2.0, "step": 0.01}),
                 "seed": ("INT", {"default": -1, "min": -1, "max": 2147483647}),
-                "image_download_timeout": ("INT", {"default": 30, "min": 5, "max": 120, "step": 1}),
+                "image_download_timeout": ("INT", {"default": 100, "min": 5, "max": 300, "step": 1}),
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING")
-    RETURN_NAMES = ("images", "response", "image_urls")
+    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("images", "response", "image_urls", "prompt")
     FUNCTION = "process"
-    CATEGORY = "Comfyui_Chatgpt_api"
+    CATEGORY = "Comfly/Chatgpt"
 
     def __init__(self):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        config_file_path = os.path.join(current_dir, 'Comflyapi.json')
-        
-        try:
-            with open(config_file_path, 'r') as f:
-                api_config = json.load(f)
-                self.api_key = api_config.get('api_key', '')
-        except Exception as e:
-            print(f"Error loading API config: {str(e)}")
-            self.api_key = ""
-        
-        # Fixed timeout of 300 seconds for API calls
+        self.api_key = get_config().get('api_key', '')
         self.timeout = 300
-        # Default timeout for image downloads
-        self.image_download_timeout = 30
+        self.image_download_timeout = 100
         self.api_endpoint = "https://ai.comfly.chat/v1/chat/completions"
 
     def get_headers(self):
@@ -157,9 +154,15 @@ class ComfyuiChatGPTApi:
             print(f"Error downloading image from {url}: {str(e)}")
             return None
 
-    def process(self, model, prompt, files=None, image_url="", images=None, temperature=0.7, 
+    def process(self, prompt, model, files=None, image_url="", images=None, temperature=0.7, 
                max_tokens=4096, top_p=1.0, frequency_penalty=0.0, presence_penalty=0.0, seed=-1,
-               image_download_timeout=30):
+               image_download_timeout=100, api_key=""):
+        if api_key.strip():
+            self.api_key = api_key
+            config = get_config()
+            config['api_key'] = api_key
+            save_config(config)
+            
         try:
             # Set image download timeout from parameter
             self.image_download_timeout = image_download_timeout
@@ -169,7 +172,7 @@ class ComfyuiChatGPTApi:
                 print(error_message)
                 # Return a blank image if no input image
                 blank_img = Image.new('RGB', (512, 512), color='white')
-                return (pil2tensor(blank_img), error_message, "")  
+                return (pil2tensor(blank_img), error_message, "", "") 
             
             # Initialize progress bar
             pbar = comfy.utils.ProgressBar(100)
@@ -305,13 +308,13 @@ class ComfyuiChatGPTApi:
             if images is not None:
                 # Return input images with text response
                 pbar.update_absolute(100)
-                return (images, formatted_response, image_urls_string)
+                return (images, formatted_response, image_urls_string, prompt)  
             else:
                 # Create a default blank image
                 blank_img = Image.new('RGB', (512, 512), color='white')
                 blank_tensor = pil2tensor(blank_img)
                 pbar.update_absolute(100)
-                return (blank_tensor, formatted_response, image_urls_string)
+                return (blank_tensor, formatted_response, image_urls_string, prompt)  
             
         except Exception as e:
             error_message = f"Error calling ChatGPT API: {str(e)}"
@@ -319,11 +322,11 @@ class ComfyuiChatGPTApi:
             
             # Return error with original image or blank image
             if images is not None:
-                return (images, error_message, "")
+                return (images, error_message, "", prompt)  
             else:
                 blank_img = Image.new('RGB', (512, 512), color='white')
                 blank_tensor = pil2tensor(blank_img)
-                return (blank_tensor, error_message, "")
+                return (blank_tensor, error_message, "", prompt) 
 
     async def stream_response(self, payload, pbar):
         """Stream response from API"""
@@ -344,7 +347,7 @@ class ComfyuiChatGPTApi:
                     async for line in response.content:
                         line = line.decode('utf-8').strip()
                         if line.startswith('data: '):
-                            data = line[6:]  # Remove 'data: ' prefix
+                            data = line[6:]  
                             if data == '[DONE]':
                                 break
                             
@@ -367,7 +370,6 @@ class ComfyuiChatGPTApi:
             raise TimeoutError(f"API request timed out after {self.timeout} seconds")
         except Exception as e:
             raise Exception(f"Error in streaming response: {str(e)}")
-
 
 
 WEB_DIRECTORY = "./web"    
