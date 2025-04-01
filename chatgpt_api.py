@@ -33,7 +33,7 @@ def save_config(config):
 
 
 class ComfyuiChatGPTApi:
-     @classmethod
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
