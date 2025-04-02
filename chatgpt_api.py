@@ -58,7 +58,7 @@ class ComfyuiChatGPTApi:
     RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING")
     RETURN_NAMES = ("images", "response", "image_urls", "prompt")
     FUNCTION = "process"
-    CATEGORY = "Comfly/Chatgpt"
+    CATEGORY = "ainewsto/Chatgpt"
 
     def __init__(self):
         self.api_key = get_config().get('api_key', '')
