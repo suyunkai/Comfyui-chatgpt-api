@@ -51,7 +51,7 @@ class ComfyuiChatGPTApi:
                 "frequency_penalty": ("FLOAT", {"default": 0.0, "min": -2.0, "max": 2.0, "step": 0.01}),
                 "presence_penalty": ("FLOAT", {"default": 0.0, "min": -2.0, "max": 2.0, "step": 0.01}),
                 "seed": ("INT", {"default": -1, "min": -1, "max": 2147483647}),
-                "image_download_timeout": ("INT", {"default": 100, "min": 5, "max": 300, "step": 1}),
+                "image_download_timeout": ("INT", {"default": 600, "min": 300, "max": 1200, "step": 10}),
             }
         }
 
@@ -62,8 +62,8 @@ class ComfyuiChatGPTApi:
 
     def __init__(self):
         self.api_key = get_config().get('api_key', '')
-        self.timeout = 300
-        self.image_download_timeout = 100
+        self.timeout = 800
+        self.image_download_timeout = 600
         self.api_endpoint = "https://ai.comfly.chat/v1/chat/completions"
 
     def get_headers(self):
@@ -156,7 +156,7 @@ class ComfyuiChatGPTApi:
 
     def process(self, prompt, model, files=None, image_url="", images=None, temperature=0.7, 
                max_tokens=4096, top_p=1.0, frequency_penalty=0.0, presence_penalty=0.0, seed=-1,
-               image_download_timeout=100, api_key=""):
+               image_download_timeout=600, api_key=""):
         if api_key.strip():
             self.api_key = api_key
             config = get_config()
