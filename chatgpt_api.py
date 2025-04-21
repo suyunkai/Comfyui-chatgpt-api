@@ -372,7 +372,6 @@ class ComfyuiChatGPTApi:
             raise Exception(f"Error in streaming response: {str(e)}")
 
 
-WEB_DIRECTORY = "./web"    
         
 NODE_CLASS_MAPPINGS = {
     "ComfyuiChatGPTApi": ComfyuiChatGPTApi,
