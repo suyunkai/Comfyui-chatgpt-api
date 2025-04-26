@@ -16,9 +16,10 @@
 
 ![image](https://github.com/user-attachments/assets/9d08d5fc-dde9-4523-955c-31652a74f1a5)
 
-一共四个分组：default默认分组为官方逆向，价格便宜，缺点就是不稳定，速度慢。按次收费。不支持额外参数选择。
+一共四个分组：default默认分组为官方逆向，价格便宜，缺点就是不稳定，速度慢。按次收费。不支持额外参数选择。这个分组的apikey只能用于ComfyuiChatGPTApi节点。
+
 其他三个组都是官方api组，最优惠的目前是ssvip组。分组需要再令牌里面去修改选择。这3个官方分组优点就是速度快，稳定性高。支持官方参数调整。
-缺点就是贵，但是也比官方便宜。大家可以按照自己的情况选择。
+缺点就是贵，但是也比官方便宜。大家可以按照自己的情况选择。这3个分组的令牌的apikey只能用在下面2个新节点上面！！！
 
 1. Comfyui_gpt_image_1 节点：文生图，有耕读参数调整，支持调整生图限制为low。
 
@@ -39,8 +40,8 @@
 
 `Chatgpt节点`: 
 
-ComflyChatGPTApi节点新增官方gpt-image-1，按次计费 0.06，
-ComflyChatGPTApi节点新增chats输出口，输出多轮对话。
+ComfyuiChatGPTApi节点新增官方gpt-image-1，按次计费 0.06，
+ComfyuiChatGPTApi节点新增chats输出口，输出多轮对话。
 新增clear_chats,当为Ture的时候，只能image输入什么图片修改什么图片，不支持显示上下文对话。
 当为Flase的时候，支持对上一次生成的图片进行二次修改。支持显示上下文对话。
 
