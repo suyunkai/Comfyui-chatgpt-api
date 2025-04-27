@@ -739,11 +739,11 @@ class ComfyuiChatGPTApi:
 NODE_CLASS_MAPPINGS = {
     "ComfyuiChatGPTApi": ComfyuiChatGPTApi,
     "Comfyui_gpt_image_1_edit": Comfyui_gpt_image_1_edit,
-    "Comfyui_gpt_image_1"1": Comfyui_gpt_image_1",
+    "Comfyui_gpt_image_1": Comfyui_gpt_image_1",
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ComfyuiChatGPTApi": "ComfyuiChatGPTApi",
     "Comfyui_gpt_image_1_edit": "Comfyui_gpt_image_1_edit",
-    "Comfyui_gpt_image_1": "Comfyui_gpt_image_1"",
+    "Comfyui_gpt_image_1": "Comfyui_gpt_image_1",
 }
