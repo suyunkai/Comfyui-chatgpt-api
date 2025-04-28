@@ -15,6 +15,7 @@ import aiohttp
 import asyncio
 import base64
 import uuid
+import numpy as np
 import folder_paths
 from .utils import pil2tensor, tensor2pil
 from comfy.utils import common_upscale
