@@ -140,8 +140,8 @@ class Comfyui_gpt_image_1_edit:
                 mask_byte_arr = io.BytesIO()
                 mask_img.save(mask_byte_arr, format='PNG')
                 mask_byte_arr.seek(0)
-
-            files['mask'] = ('mask.png', mask_byte_arr, 'image/png')
+                files['mask'] = ('mask.png', mask_byte_arr, 'image/png')
+            
             files['prompt'] = (None, prompt)
             files['model'] = (None, model)
             files['n'] = (None, str(n))
@@ -150,7 +150,7 @@ class Comfyui_gpt_image_1_edit:
             # Only include size if it's not "auto"
             if size != "auto":
                 files['size'] = (None, size)
-
+                
             response = requests.post(
                 "https://ai.comfly.chat/v1/images/edits",
                 headers=self.get_headers(),
