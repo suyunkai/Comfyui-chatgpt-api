@@ -91,10 +91,10 @@ class Comfyui_gpt_image_1_edit:
     
     def format_conversation_history(self):
         """Format the conversation history for display"""
-        if not Comfly_gpt_image_1_edit._conversation_history:
+        if not Comfyui_gpt_image_1_edit._conversation_history:
             return ""
         formatted_history = ""
-        for entry in Comfly_gpt_image_1_edit._conversation_history:
+        for entry in Comfyui_gpt_image_1_edit._conversation_history:
             formatted_history += f"**User**: {entry['user']}\n\n"
             formatted_history += f"**AI**: {entry['ai']}\n\n"
             formatted_history += "---\n\n"
@@ -112,20 +112,20 @@ class Comfyui_gpt_image_1_edit:
         original_batch_size = image.shape[0]
         use_saved_image = False
 
-        if not clear_chats and Comfly_gpt_image_1_edit._last_edited_image is not None:
+        if not clear_chats and Comfyui_gpt_image_1_edit._last_edited_image is not None:
             if original_batch_size > 1:
-                last_batch_size = Comfly_gpt_image_1_edit._last_edited_image.shape[0]
-                last_image_first = Comfly_gpt_image_1_edit._last_edited_image[0:1]
+                last_batch_size = Comfyui_gpt_image_1_edit._last_edited_image.shape[0]
+                last_image_first = Comfyui_gpt_image_1_edit._last_edited_image[0:1]
                 if last_image_first.shape[1:] == original_image.shape[1:]:
                     image = torch.cat([last_image_first, original_image[1:]], dim=0)
                     use_saved_image = True
             else:
 
-                image = Comfly_gpt_image_1_edit._last_edited_image
+                image = Comfyui_gpt_image_1_edit._last_edited_image
                 use_saved_image = True
 
         if clear_chats:
-            Comfly_gpt_image_1_edit._conversation_history = []
+            Comfyui_gpt_image_1_edit._conversation_history = []
 
             
         try:
@@ -278,12 +278,12 @@ class Comfyui_gpt_image_1_edit:
                 if size != "auto":
                     response_info += f"Size: {size}\n"
 
-                Comfly_gpt_image_1_edit._conversation_history.append({
+                Comfyui_gpt_image_1_edit._conversation_history.append({
                     "user": f"Edit image with prompt: {prompt}",
                     "ai": f"Generated edited image with {model}"
                 })
  
-                Comfly_gpt_image_1_edit._last_edited_image = combined_tensor
+                Comfyui_gpt_image_1_edit._last_edited_image = combined_tensor
                 
                 pbar.update_absolute(100)
                 return (combined_tensor, response_info, self.format_conversation_history())
