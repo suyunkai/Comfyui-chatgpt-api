@@ -8,6 +8,21 @@
 
 # 插件 Node：
 
+20250429：
+
+`Chatgpt节点`: Comfyui_gpt_image_1_edit新增chats输出口，输出多轮对话。
+新增clear_chats,当为Ture的时候，只能image输入什么图片修改什么图片，不支持显示上下文对话。
+当为Flase的时候，支持对上一次生成的图片进行二次修改。支持显示上下文对话。并且支持多图模式下新增图片参考。
+
+<details>
+<summary>查看更新/Update </summary>  
+ 
+![2eaf76b077612170647f6861e43e2af](https://github.com/user-attachments/assets/1c4c484f-c3c6-48c6-96c5-58c4ef4e59d5)
+
+![6a43cb051fece84815ac6036bee3a4c](https://github.com/user-attachments/assets/f0fbf71e-8cfb-448e-87cd-1e147bb2f552)
+
+</details> 
+
 
 20250425：
 
