@@ -636,8 +636,8 @@ class ComfyuiChatGPTApi:
             content.append({"type": "text", "text": prompt})
             
            
-            if not clear_chats and ComflyChatGPTApi._last_generated_image_urls:
-                prev_image_url = ComflyChatGPTApi._last_generated_image_urls.split('\n')[0].strip()
+            if not clear_chats and ComfyuiChatGPTApi._last_generated_image_urls:
+                prev_image_url = ComfyuiChatGPTApi._last_generated_image_urls.split('\n')[0].strip()
                 if prev_image_url:
                     print(f"Using previous image URL: {prev_image_url}")
                     content.append({
@@ -735,7 +735,7 @@ class ComfyuiChatGPTApi:
             image_urls_string = "\n".join(image_urls) if image_urls else ""
             
             if image_urls:
-                ComflyChatGPTApi._last_generated_image_urls = image_urls_string
+                ComfyuiChatGPTApi._last_generated_image_urls = image_urls_string
      
             chat_history = self.format_conversation_history()
             if image_urls:
