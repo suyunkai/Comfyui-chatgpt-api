@@ -51,7 +51,7 @@ def downscale_input(image):
     s = s.movedim(1,-1)
     return s
 
-class Comfyui_gpt_image_1_edit:
+class Comfly_gpt_image_1_edit:
 
     _last_edited_image = None
     _conversation_history = []
@@ -72,6 +72,11 @@ class Comfyui_gpt_image_1_edit:
                 "size": (["auto", "1024x1024", "1536x1024", "1024x1536"], {"default": "auto"}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "clear_chats": ("BOOLEAN", {"default": True}),
+                "background": (["auto", "transparent", "opaque"], {"default": "auto"}),
+                "output_compression": ("INT", {"default": 100, "min": 0, "max": 100}),
+                "output_format": (["png", "jpeg", "webp"], {"default": "png"}),
+                "max_retries": ("INT", {"default": 5, "min": 1, "max": 10}),
+                "initial_timeout": ("INT", {"default": 900, "min": 60, "max": 1200}),
             }
         }
 
@@ -82,7 +87,17 @@ class Comfyui_gpt_image_1_edit:
 
     def __init__(self):
         self.api_key = get_config().get('api_key', '')
-        self.timeout = 300
+        self.timeout = 900
+        self.session = requests.Session()
+        retry_strategy = requests.packages.urllib3.util.retry.Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"]
+        )
+        adapter = requests.adapters.HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
 
     def get_headers(self):
         return {
@@ -91,17 +106,71 @@ class Comfyui_gpt_image_1_edit:
     
     def format_conversation_history(self):
         """Format the conversation history for display"""
-        if not Comfyui_gpt_image_1_edit._conversation_history:
+        if not Comfly_gpt_image_1_edit._conversation_history:
             return ""
         formatted_history = ""
-        for entry in Comfyui_gpt_image_1_edit._conversation_history:
+        for entry in Comfly_gpt_image_1_edit._conversation_history:
             formatted_history += f"**User**: {entry['user']}\n\n"
             formatted_history += f"**AI**: {entry['ai']}\n\n"
             formatted_history += "---\n\n"
         return formatted_history.strip()
     
+    def make_request_with_retry(self, url, data=None, files=None, max_retries=5, initial_timeout=300):
+        """Make a request with automatic retries and exponential backoff"""
+        for attempt in range(1, max_retries + 1):
+            current_timeout = min(initial_timeout * (1.5 ** (attempt - 1)), 1200)  
+            
+            try:
+                if files:
+                    response = self.session.post(
+                        url,
+                        headers=self.get_headers(),
+                        data=data,
+                        files=files,
+                        timeout=current_timeout
+                    )
+                else:
+                    response = self.session.post(
+                        url,
+                        headers=self.get_headers(),
+                        json=data,
+                        timeout=current_timeout
+                    )
+                
+                response.raise_for_status()
+                return response
+            
+            except requests.exceptions.Timeout as e:
+                if attempt == max_retries:
+                    raise TimeoutError(f"Request timed out after {max_retries} attempts. Last timeout: {current_timeout}s")
+                wait_time = min(2 ** (attempt - 1), 60)  
+                time.sleep(wait_time)
+            
+            except requests.exceptions.ConnectionError as e:
+                if attempt == max_retries:
+                    raise ConnectionError(f"Connection error after {max_retries} attempts: {str(e)}")
+                wait_time = min(2 ** (attempt - 1), 60)
+                time.sleep(wait_time)
+            
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code in (400, 401, 403):
+                    print(f"Client error: {str(e)}")
+                    raise
+                if attempt == max_retries:
+                    raise
+                wait_time = min(2 ** (attempt - 1), 60)
+                time.sleep(wait_time)
+            
+            except Exception as e:
+                if attempt == max_retries:
+                    raise
+                wait_time = min(2 ** (attempt - 1), 60)
+                time.sleep(wait_time)
+    
     def edit_image(self, image, prompt, model="gpt-image-1", n=1, quality="auto", 
-              seed=0, mask=None, api_key="", size="auto", clear_chats=True):
+              seed=0, mask=None, api_key="", size="auto", clear_chats=True,
+              background="auto", output_compression=100, output_format="png",
+              max_retries=5, initial_timeout=300):
         if api_key.strip():
             self.api_key = api_key
             config = get_config()
@@ -112,20 +181,19 @@ class Comfyui_gpt_image_1_edit:
         original_batch_size = image.shape[0]
         use_saved_image = False
 
-        if not clear_chats and Comfyui_gpt_image_1_edit._last_edited_image is not None:
+        if not clear_chats and Comfly_gpt_image_1_edit._last_edited_image is not None:
             if original_batch_size > 1:
-                last_batch_size = Comfyui_gpt_image_1_edit._last_edited_image.shape[0]
-                last_image_first = Comfyui_gpt_image_1_edit._last_edited_image[0:1]
+                last_batch_size = Comfly_gpt_image_1_edit._last_edited_image.shape[0]
+                last_image_first = Comfly_gpt_image_1_edit._last_edited_image[0:1]
                 if last_image_first.shape[1:] == original_image.shape[1:]:
                     image = torch.cat([last_image_first, original_image[1:]], dim=0)
                     use_saved_image = True
             else:
-
-                image = Comfyui_gpt_image_1_edit._last_edited_image
+                image = Comfly_gpt_image_1_edit._last_edited_image
                 use_saved_image = True
 
         if clear_chats:
-            Comfyui_gpt_image_1_edit._conversation_history = []
+            Comfly_gpt_image_1_edit._conversation_history = []
 
             
         try:
@@ -177,65 +245,68 @@ class Comfyui_gpt_image_1_edit:
                 mask_byte_arr.seek(0)
                 files['mask'] = ('mask.png', mask_byte_arr, 'image/png')
 
-            if 'image[]' in files:
-
-                data = {
-                    'prompt': prompt,
-                    'model': model,
-                    'n': str(n),
-                    'quality': quality
-                }
+            data = {
+                'prompt': prompt,
+                'model': model,
+                'n': str(n),
+                'quality': quality
+            }
+            
+            if size != "auto":
+                data['size'] = size
                 
-                if size != "auto":
-                    data['size'] = size
-
-                image_files = []
-                for file_tuple in files['image[]']:
-                    image_files.append(('image', file_tuple))
-
-                if 'mask' in files:
-                    image_files.append(('mask', files['mask']))
-
-                response = requests.post(
-                    "https://ai.comfly.chat/v1/images/edits",
-                    headers=self.get_headers(),
-                    data=data,
-                    files=image_files,
-                    timeout=self.timeout
-                )
-            else:
-                data = {
-                    'prompt': prompt,
-                    'model': model,
-                    'n': str(n),
-                    'quality': quality
-                }
+            if background != "auto":
+                data['background'] = background
                 
-                if size != "auto":
-                    data['size'] = size
+            if output_compression != 100:
+                data['output_compression'] = str(output_compression)
+                
+            if output_format != "png":
+                data['output_format'] = output_format
 
-                request_files = []
+            pbar.update_absolute(30)
 
-                if 'image' in files:
-                    request_files.append(('image', files['image']))
+            try:
+                if 'image[]' in files:
+                    image_files = []
+                    for file_tuple in files['image[]']:
+                        image_files.append(('image', file_tuple))
 
-                if 'mask' in files:
-                    request_files.append(('mask', files['mask']))
+                    if 'mask' in files:
+                        image_files.append(('mask', files['mask']))
 
-                response = requests.post(
-                    "https://ai.comfly.chat/v1/images/edits",
-                    headers=self.get_headers(),
-                    data=data,
-                    files=request_files,
-                    timeout=self.timeout
-                )
+                    response = self.make_request_with_retry(
+                        "https://ai.comfly.chat/v1/images/edits",
+                        data=data,
+                        files=image_files,
+                        max_retries=max_retries,
+                        initial_timeout=initial_timeout
+                    )
+                else:
+                    request_files = []
+                    if 'image' in files:
+                        request_files.append(('image', files['image']))
+                    if 'mask' in files:
+                        request_files.append(('mask', files['mask']))
 
-            pbar.update_absolute(50)
+                    response = self.make_request_with_retry(
+                        "https://ai.comfly.chat/v1/images/edits",
+                        data=data,
+                        files=request_files,
+                        max_retries=max_retries,
+                        initial_timeout=initial_timeout
+                    )
 
-            if response.status_code != 200:
-                error_message = f"API Error: {response.status_code} - {response.text}"
+            except TimeoutError as e:
+                error_message = f"API timeout error: {str(e)}"
                 print(error_message)
                 return (original_image, error_message, self.format_conversation_history())
+            except Exception as e:
+                error_message = f"API request error: {str(e)}"
+                print(error_message)
+                return (original_image, error_message, self.format_conversation_history())
+
+            pbar.update_absolute(50)
             result = response.json()
             
             if "data" not in result or not result["data"]:
@@ -255,13 +326,31 @@ class Comfyui_gpt_image_1_edit:
                 elif "url" in item:
                     image_urls.append(item["url"])
                     try:
-                        img_response = requests.get(item["url"])
-                        if img_response.status_code == 200:
-                            edited_image = Image.open(BytesIO(img_response.content))
-                            edited_tensor = pil2tensor(edited_image)
-                            edited_images.append(edited_tensor)
+                        # Also use retry logic for downloading images
+                        for download_attempt in range(1, max_retries + 1):
+                            try:
+                                img_response = requests.get(
+                                    item["url"], 
+                                    timeout=min(initial_timeout * (1.5 ** (download_attempt - 1)), 900)
+                                )
+                                img_response.raise_for_status()
+                                
+                                edited_image = Image.open(BytesIO(img_response.content))
+                                edited_tensor = pil2tensor(edited_image)
+                                edited_images.append(edited_tensor)
+                                break
+                            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                                if download_attempt == max_retries:
+                                    print(f"Failed to download image after {max_retries} attempts: {str(e)}")
+                                    continue
+                                wait_time = min(2 ** (download_attempt - 1), 60)
+                                print(f"Image download error (attempt {download_attempt}/{max_retries}). Retrying in {wait_time} seconds...")
+                                time.sleep(wait_time)
+                            except Exception as e:
+                                print(f"Error downloading image from URL: {str(e)}")
+                                break
                     except Exception as e:
-                        print(f"Error downloading image from URL: {str(e)}")
+                        print(f"Error processing image URL: {str(e)}")
 
             pbar.update_absolute(90)
 
@@ -277,13 +366,22 @@ class Comfyui_gpt_image_1_edit:
                     
                 if size != "auto":
                     response_info += f"Size: {size}\n"
+                    
+                if background != "auto":
+                    response_info += f"Background: {background}\n"
+                    
+                if output_compression != 100:
+                    response_info += f"Output Compression: {output_compression}%\n"
+                    
+                if output_format != "png":
+                    response_info += f"Output Format: {output_format}\n"
 
-                Comfyui_gpt_image_1_edit._conversation_history.append({
+                Comfly_gpt_image_1_edit._conversation_history.append({
                     "user": f"Edit image with prompt: {prompt}",
                     "ai": f"Generated edited image with {model}"
                 })
  
-                Comfyui_gpt_image_1_edit._last_edited_image = combined_tensor
+                Comfly_gpt_image_1_edit._last_edited_image = combined_tensor
                 
                 pbar.update_absolute(100)
                 return (combined_tensor, response_info, self.format_conversation_history())
@@ -298,7 +396,6 @@ class Comfyui_gpt_image_1_edit:
             print(traceback.format_exc())  
             print(error_message)
             return (original_image, error_message, self.format_conversation_history())
-
         
 
 class Comfyui_gpt_image_1:
