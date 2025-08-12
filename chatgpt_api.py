@@ -51,7 +51,7 @@ def downscale_input(image):
     s = s.movedim(1,-1)
     return s
 
-class Comfly_gpt_image_1_edit:
+class Comfyui_gpt_image_1_edit:
 
     _last_edited_image = None
     _conversation_history = []
@@ -106,10 +106,10 @@ class Comfly_gpt_image_1_edit:
     
     def format_conversation_history(self):
         """Format the conversation history for display"""
-        if not Comfly_gpt_image_1_edit._conversation_history:
+        if not Comfyui_gpt_image_1_edit._conversation_history:
             return ""
         formatted_history = ""
-        for entry in Comfly_gpt_image_1_edit._conversation_history:
+        for entry in Comfyui_gpt_image_1_edit._conversation_history:
             formatted_history += f"**User**: {entry['user']}\n\n"
             formatted_history += f"**AI**: {entry['ai']}\n\n"
             formatted_history += "---\n\n"
@@ -181,19 +181,19 @@ class Comfly_gpt_image_1_edit:
         original_batch_size = image.shape[0]
         use_saved_image = False
 
-        if not clear_chats and Comfly_gpt_image_1_edit._last_edited_image is not None:
+        if not clear_chats and Comfyui_gpt_image_1_edit._last_edited_image is not None:
             if original_batch_size > 1:
-                last_batch_size = Comfly_gpt_image_1_edit._last_edited_image.shape[0]
-                last_image_first = Comfly_gpt_image_1_edit._last_edited_image[0:1]
+                last_batch_size = Comfyui_gpt_image_1_edit._last_edited_image.shape[0]
+                last_image_first = Comfyui_gpt_image_1_edit._last_edited_image[0:1]
                 if last_image_first.shape[1:] == original_image.shape[1:]:
                     image = torch.cat([last_image_first, original_image[1:]], dim=0)
                     use_saved_image = True
             else:
-                image = Comfly_gpt_image_1_edit._last_edited_image
+                image = Comfyui_gpt_image_1_edit._last_edited_image
                 use_saved_image = True
 
         if clear_chats:
-            Comfly_gpt_image_1_edit._conversation_history = []
+            Comfyui_gpt_image_1_edit._conversation_history = []
 
             
         try:
@@ -326,7 +326,6 @@ class Comfly_gpt_image_1_edit:
                 elif "url" in item:
                     image_urls.append(item["url"])
                     try:
-                        # Also use retry logic for downloading images
                         for download_attempt in range(1, max_retries + 1):
                             try:
                                 img_response = requests.get(
@@ -376,12 +375,12 @@ class Comfly_gpt_image_1_edit:
                 if output_format != "png":
                     response_info += f"Output Format: {output_format}\n"
 
-                Comfly_gpt_image_1_edit._conversation_history.append({
+                Comfyui_gpt_image_1_edit._conversation_history.append({
                     "user": f"Edit image with prompt: {prompt}",
                     "ai": f"Generated edited image with {model}"
                 })
  
-                Comfly_gpt_image_1_edit._last_edited_image = combined_tensor
+                Comfyui_gpt_image_1_edit._last_edited_image = combined_tensor
                 
                 pbar.update_absolute(100)
                 return (combined_tensor, response_info, self.format_conversation_history())
@@ -398,7 +397,7 @@ class Comfly_gpt_image_1_edit:
             return (original_image, error_message, self.format_conversation_history())
         
 
-class Comfly_gpt_image_1:
+class Comfyui_gpt_image_1:
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -421,7 +420,7 @@ class Comfly_gpt_image_1:
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("generated_image", "response")
     FUNCTION = "generate_image"
-    CATEGORY = "Comfly/Chatgpt"
+    CATEGORY = "ainewsto/Chatgpt"
 
     def __init__(self):
         self.api_key = get_config().get('api_key', '')
@@ -777,8 +776,8 @@ class ComfyuiChatGPTApi:
             content.append({"type": "text", "text": prompt})
             
            
-            if not clear_chats and ComflyChatGPTApi._last_generated_image_urls:
-                prev_image_url = ComflyChatGPTApi._last_generated_image_urls.split('\n')[0].strip()
+            if not clear_chats and ComfyuiChatGPTApi._last_generated_image_urls:
+                prev_image_url = ComfyuiChatGPTApi._last_generated_image_urls.split('\n')[0].strip()
                 if prev_image_url:
                     print(f"Using previous image URL: {prev_image_url}")
                     content.append({
@@ -873,7 +872,7 @@ class ComfyuiChatGPTApi:
             image_urls_string = "\n".join(image_urls) if image_urls else ""
             
             if image_urls:
-                ComflyChatGPTApi._last_generated_image_urls = image_urls_string
+                ComfyuiChatGPTApi._last_generated_image_urls = image_urls_string
      
             chat_history = self.format_conversation_history()
             if image_urls:
