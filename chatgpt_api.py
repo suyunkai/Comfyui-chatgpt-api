@@ -398,7 +398,7 @@ class Comfly_gpt_image_1_edit:
             return (original_image, error_message, self.format_conversation_history())
         
 
-class Comfyui_gpt_image_1:
+class Comfly_gpt_image_1:
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -421,7 +421,7 @@ class Comfyui_gpt_image_1:
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("generated_image", "response")
     FUNCTION = "generate_image"
-    CATEGORY = "ainewsto/Chatgpt"
+    CATEGORY = "Comfly/Chatgpt"
 
     def __init__(self):
         self.api_key = get_config().get('api_key', '')
@@ -461,8 +461,7 @@ class Comfyui_gpt_image_1:
                 "output_format": output_format,
                 "moderation": moderation,
             }
-            
-            # Only include size if it's not "auto"
+
             if size != "auto":
                 payload["size"] = size
             
@@ -480,11 +479,9 @@ class Comfyui_gpt_image_1:
                 blank_image = Image.new('RGB', (1024, 1024), color='white')
                 blank_tensor = pil2tensor(blank_image)
                 return (blank_tensor, error_message)
-                
-            # Parse the response
+
             result = response.json()
-            
-            # Format the response information
+
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             response_info = f"**GPT-image-1 Generation ({timestamp})**\n\n"
             response_info += f"Prompt: {prompt}\n"
@@ -494,8 +491,7 @@ class Comfyui_gpt_image_1:
                 response_info += f"Size: {size}\n"
             response_info += f"Background: {background}\n"
             response_info += f"Seed: {seed} (Note: Seed not used by API)\n\n"
-            
-            # Process the generated images
+
             generated_images = []
             image_urls = []
             
@@ -504,14 +500,15 @@ class Comfyui_gpt_image_1:
                     pbar.update_absolute(50 + (i+1) * 50 // len(result["data"]))
                     
                     if "b64_json" in item:
-                        # Decode base64 image
-                        image_data = base64.b64decode(item["b64_json"])
+                        b64_data = item["b64_json"]
+                        if b64_data.startswith("data:image/png;base64,"):
+                            b64_data = b64_data[len("data:image/png;base64,"):]    
+                        image_data = base64.b64decode(b64_data)
                         generated_image = Image.open(BytesIO(image_data))
                         generated_tensor = pil2tensor(generated_image)
                         generated_images.append(generated_tensor)
                     elif "url" in item:
                         image_urls.append(item["url"])
-                        # Download and process the image from URL
                         try:
                             img_response = requests.get(item["url"])
                             if img_response.status_code == 200:
@@ -527,8 +524,7 @@ class Comfyui_gpt_image_1:
                 blank_image = Image.new('RGB', (1024, 1024), color='white')
                 blank_tensor = pil2tensor(blank_image)
                 return (blank_tensor, response_info)
-                
-            # Add usage information to the response if available
+
             if "usage" in result:
                 response_info += "Usage Information:\n"
                 if "total_tokens" in result["usage"]:
@@ -537,8 +533,7 @@ class Comfyui_gpt_image_1:
                     response_info += f"Input Tokens: {result['usage']['input_tokens']}\n"
                 if "output_tokens" in result["usage"]:
                     response_info += f"Output Tokens: {result['usage']['output_tokens']}\n"
-                
-                # Add detailed token usage if available
+
                 if "input_tokens_details" in result["usage"]:
                     response_info += "Input Token Details:\n"
                     details = result["usage"]["input_tokens_details"]
@@ -548,7 +543,6 @@ class Comfyui_gpt_image_1:
                         response_info += f"  Image Tokens: {details['image_tokens']}\n"
             
             if generated_images:
-                # Combine all generated images into a single tensor
                 combined_tensor = torch.cat(generated_images, dim=0)
                 
                 pbar.update_absolute(100)
