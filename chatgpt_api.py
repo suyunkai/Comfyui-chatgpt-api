@@ -569,7 +569,7 @@ class Comfyui_gpt_image_1:
             return (blank_tensor, error_message)
 
 
-class ComflyChatGPTApi:
+class ComfyuiChatGPTApi:
  
     _last_generated_image_urls = ""
     
@@ -936,3 +936,4 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Comfyui_gpt_image_1_edit": "Comfyui_gpt_image_1_edit",
     "Comfyui_gpt_image_1": "Comfyui_gpt_image_1",
 }
+
