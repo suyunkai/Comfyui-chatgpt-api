@@ -276,7 +276,7 @@ class Comfyui_gpt_image_1_edit:
                         image_files.append(('mask', files['mask']))
 
                     response = self.make_request_with_retry(
-                        "https://ai.comfly.chat/v1/images/edits",
+                        "https://one.api4gpt.com/v1/images/edits",
                         data=data,
                         files=image_files,
                         max_retries=max_retries,
@@ -290,7 +290,7 @@ class Comfyui_gpt_image_1_edit:
                         request_files.append(('mask', files['mask']))
 
                     response = self.make_request_with_retry(
-                        "https://ai.comfly.chat/v1/images/edits",
+                        "https://one.api4gpt.com/v1/images/edits",
                         data=data,
                         files=request_files,
                         max_retries=max_retries,
@@ -465,7 +465,7 @@ class Comfyui_gpt_image_1:
                 payload["size"] = size
             
             response = requests.post(
-                "https://ai.comfly.chat/v1/images/generations",
+                "https://one.api4gpt.com/v1/images/generations",
                 headers=self.get_headers(),
                 json=payload,
                 timeout=self.timeout
@@ -598,7 +598,7 @@ class ComfyuiChatGPTApi:
         self.api_key = get_config().get('api_key', '')
         self.timeout = 800
         self.image_download_timeout = 600
-        self.api_endpoint = "https://ai.comfly.chat/v1/chat/completions"
+        self.api_endpoint = "https://one.api4gpt.com/v1/chat/completions"
         self.conversation_history = []
  
     def get_headers(self):
@@ -929,4 +929,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Comfyui_gpt_image_1_edit": "Comfyui_gpt_image_1_edit",
     "Comfyui_gpt_image_1": "Comfyui_gpt_image_1",
 }
+
 
